@@ -3,21 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Emoji Checkers</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Emoji Maze Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Courier New', monospace; background-color: black; color: limegreen; text-align: center; }
+        #grid { display: grid; grid-template-columns: repeat(10, 40px); gap: 5px; justify-content: center; margin-top: 20px; }
+        .cell { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
+        .wall { cursor: not-allowed; }
+        .timer { margin-top: 10px; font-size: 20px; }
+        .history { margin-top: 20px; }
+        #controls { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
+        .control-row { display: flex; gap: 10px; }
+        .btn { font-size: 30px; cursor: pointer; background: none; border: none; }
+    </style>
 </head>
 <body>
-    <h1>Online Emoji Checkers</h1>
-    <h2>Red: <span id="red-score">0</span> - Black: <span id="black-score">0</span></h2>
-    <div id="board"></div>
+    <h1 class="text-3xl font-bold">🕹️ Emoji Maze Game</h1>
+    <p>Click 😊 to select, then click a valid adjacent spot to move!</p>
+    <p class="timer" id="timer">Time Left: 60</p>
+    <div id="grid"></div>
+    
     <div id="controls">
-        <button id="up" hidden>⬆️</button>
-        <div>
-            <button id="left" hidden>⬅️</button>
-            <button id="right" hidden>➡️</button>
+        <div class="control-row">
+            <button id="up-btn" class="btn">⬆️</button>
         </div>
-        <button id="down" hidden>⬇️</button>
+        <div class="control-row">
+            <button id="left-btn" class="btn">⬅️</button>
+            <button id="right-btn" class="btn">➡️</button>
+        </div>
+        <div class="control-row">
+            <button id="down-btn" class="btn">⬇️</button>
+        </div>
     </div>
-    <script src="script.js"></script>
+
+    <div class="history" id="history"></div>
+
+    <script>
+        const size = 10;
+        let maze = [];
+        let playerX = 0, playerY = 0;
+        let goalX = size - 1, goalY = size - 1;
+        let selected = false;
+        let timeLeft = 60;
+        let gameOver = false;
+
+        function generateMaze() {
+            maze = Array(size).fill(null).map(() => Array(size).fill('⬛'));
+
+            function carveMaze(x, y) {
+                maze[y][x] = '🟩';
+                let directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+                directions = directions.sort(() => Math.random() - 0.5);
+
+                for (let [dx, dy] of directions) {
+                    let nx = x + dx * 2, ny = y + dy * 2;
+                    if (nx >= 0 && ny >= 0 && nx < size && ny < size && maze[ny][nx] === '⬛') {
+                        maze[y + dy][x + dx] = '🟩';
+                        carveMaze(nx, ny);
+                    }
+                }
+            }
+
+            carveMaze(0, 0);
+
+            if (maze[goalY - 1]?.[goalX] !== '🟩' && maze[goalY]?.[goalX - 1] !== '🟩') {
+                maze[goalY - 1][goalX] = '🟩';
+            }
+
+            maze[0][0] = '😊';
+            maze[goalY][goalX] = '🏁';
+
+            renderGrid();
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById("grid");
+            grid.innerHTML = "";
+            grid.style.gridTemplateColumns = `repeat(${size}, 40px)`;
+
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    let cell = document.createElement("div");
+                    cell.classList.add("cell");
+
+                    if (Math.abs(x - playerX) <= 4 && Math.abs(y - playerY) <= 4) {
+                        cell.innerHTML = maze[y][x]; 
+                    } else {
+                        cell.innerHTML = "⬛"; // Fog of war effect
+                    }
+
+                    if (maze[y][x] === '⬛') {
+                        cell.classList.add("wall");
+                    } else {
+                        cell.onclick = () => movePlayer(x, y);
+                    }
+
+                    grid.appendChild(cell);
+                }
+            }
+            updateControls();
+        }
+
+        function movePlayer(x, y) {
+            if (gameOver) return;
+            if (!selected && maze[y][x] === "😊") {
+                maze[y][x] = "😎";
+                selected = true;
+            } else if (selected) {
+                let dx = Math.abs(x - playerX);
+                let dy = Math.abs(y - playerY);
+
+                if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
+                    if (maze[y][x] !== "⬛") {
+                        maze[playerY][playerX] = "🟩";
+                        playerX = x;
+                        playerY = y;
+                        maze[y][x] = "😊";
+                        selected = false;
+
+                        if (x === goalX && y === goalY) {
+                            gameOver = true;
+                            document.getElementById("timer").innerText = `🎉 You Won! Score: ${timeLeft}`;
+                            saveScore(timeLeft);
+                        }
+                    }
+                }
+            }
+            renderGrid();
+        }
+
+        function moveViaButton(dx, dy) {
+            let newX = playerX + dx;
+            let newY = playerY + dy;
+
+            if (newX >= 0 && newY >= 0 && newX < size && newY < size && maze[newY][newX] !== "⬛") {
+                maze[playerY][playerX] = "🟩";
+                playerX = newX;
+                playerY = newY;
+                maze[playerY][playerX] = "🫡";
+
+                renderGrid();
+                setTimeout(() => {
+                    maze[playerY][playerX] = "😊";
+                    renderGrid();
+                }, 1000);
+            }
+        }
+
+        function updateControls() {
+            document.getElementById("up-btn").style.display = (playerY > 0 && maze[playerY - 1][playerX] !== "⬛") ? "block" : "none";
+            document.getElementById("down-btn").style.display = (playerY < size - 1 && maze[playerY + 1][playerX] !== "⬛") ? "block" : "none";
+            document.getElementById("left-btn").style.display = (playerX > 0 && maze[playerY][playerX - 1] !== "⬛") ? "block" : "none";
+            document.getElementById("right-btn").style.display = (playerX < size - 1 && maze[playerY][playerX + 1] !== "⬛") ? "block" : "none";
+        }
+
+        document.getElementById("up-btn").onclick = () => moveViaButton(0, -1);
+        document.getElementById("down-btn").onclick = () => moveViaButton(0, 1);
+        document.getElementById("left-btn").onclick = () => moveViaButton(-1, 0);
+        document.getElementById("right-btn").onclick = () => moveViaButton(1, 0);
+
+        generateMaze();
+        displayHistory();
+    </script>
 </body>
 </html>
