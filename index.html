@@ -15,6 +15,7 @@
         .control-row { display: flex; gap: 10px; }
         .btn { font-size: 30px; cursor: pointer; background: none; border: none; }
         .history { margin-top: 20px; }
+        #inventory { margin-top: 10px; font-size: 18px; color: limegreen; }
     </style>
 </head>
 <body>
@@ -22,6 +23,8 @@
     <p>Click 😊 to select, then click a valid adjacent spot to move!</p>
     <p class="timer" id="timer">Time Left: 60</p>
     <div id="grid"></div>
+
+    <div id="inventory">Inventory: (Empty)</div>
     
     <div id="controls">
         <div class="control-row"><button id="up-btn" class="btn">✖️</button></div>
@@ -42,6 +45,8 @@
         let maze = [];
         let playerX = 0, playerY = 0;
         let goalX = size - 1, goalY = size - 1;
+        let flashlightX, flashlightY;
+        let hasFlashlight = false;
         let selected = false;
         let timeLeft = 60;
         let gameOver = false;
@@ -49,7 +54,9 @@
         function generateMaze() {
             gameOver = false;
             timeLeft = 60;
+            hasFlashlight = false;
             document.getElementById("timer").innerText = `Time Left: ${timeLeft}`;
+            document.getElementById("inventory").innerText = "Inventory: (Empty)";
             maze = Array(size).fill(null).map(() => Array(size).fill('⬛'));
 
             function carveMaze(x, y) {
@@ -72,6 +79,13 @@
                 maze[goalY - 1][goalX] = '🟩';
             }
 
+            // Place flashlight at a random open spot
+            do {
+                flashlightX = Math.floor(Math.random() * size);
+                flashlightY = Math.floor(Math.random() * size);
+            } while (maze[flashlightY][flashlightX] !== '🟩');
+
+            maze[flashlightY][flashlightX] = '🔦';
             maze[0][0] = '😊';
             maze[goalY][goalX] = '🏁';
 
@@ -84,12 +98,14 @@
             grid.innerHTML = "";
             grid.style.gridTemplateColumns = `repeat(${size}, 40px)`;
 
+            let fogRadius = hasFlashlight ? 4 : 2;
+
             for (let y = 0; y < size; y++) {
                 for (let x = 0; x < size; x++) {
                     let cell = document.createElement("div");
                     cell.classList.add("cell");
 
-                    if (Math.abs(x - playerX) <= 4 && Math.abs(y - playerY) <= 4) {
+                    if (Math.abs(x - playerX) <= fogRadius && Math.abs(y - playerY) <= fogRadius) {
                         cell.innerHTML = maze[y][x]; 
                     } else {
                         cell.innerHTML = "⬛";
@@ -117,28 +133,14 @@
                     playerY = y;
                     maze[y][x] = "😊";
 
+                    if (x === flashlightX && y === flashlightY) {
+                        hasFlashlight = true;
+                        document.getElementById("inventory").innerText = "Inventory: 🔦";
+                    }
+
                     checkWin();
                     renderGrid();
                 }
-            }
-        }
-
-        function moveViaButton(dx, dy) {
-            let newX = playerX + dx;
-            let newY = playerY + dy;
-
-            if (newX >= 0 && newY >= 0 && newX < size && newY < size && maze[newY][newX] !== "⬛") {
-                maze[playerY][playerX] = "🟩";
-                playerX = newX;
-                playerY = newY;
-                maze[playerY][playerX] = "🫡";
-
-                renderGrid();
-                setTimeout(() => {
-                    maze[playerY][playerX] = "😊";
-                    checkWin();
-                    renderGrid();
-                }, 500);
             }
         }
 
@@ -163,21 +165,6 @@
                     delay += 50;
                 }
             }
-        }
-
-        function updateControls() {
-            document.getElementById("up-btn").onclick = () => moveViaButton(0, -1);
-            document.getElementById("down-btn").onclick = () => moveViaButton(0, 1);
-            document.getElementById("left-btn").onclick = () => moveViaButton(-1, 0);
-            document.getElementById("right-btn").onclick = () => moveViaButton(1, 0);
-        }
-
-        function saveScore(score) {
-            let scores = JSON.parse(localStorage.getItem("emojiMazeScores")) || [];
-            scores.push(score);
-            scores.sort((a, b) => b - a);
-            localStorage.setItem("emojiMazeScores", JSON.stringify(scores.slice(0, 10)));
-            updateScoreboard();
         }
 
         function updateScoreboard() {
