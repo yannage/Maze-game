@@ -15,6 +15,7 @@
         #controls { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
         .control-row { display: flex; gap: 10px; }
         .btn { font-size: 30px; cursor: pointer; background: none; border: none; }
+        .disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -25,14 +26,14 @@
     
     <div id="controls">
         <div class="control-row">
-            <button id="up-btn" class="btn">⬆️</button>
+            <button id="up-btn" class="btn">✖️</button>
         </div>
         <div class="control-row">
-            <button id="left-btn" class="btn">⬅️</button>
-            <button id="right-btn" class="btn">➡️</button>
+            <button id="left-btn" class="btn">✖️</button>
+            <button id="right-btn" class="btn">✖️</button>
         </div>
         <div class="control-row">
-            <button id="down-btn" class="btn">⬇️</button>
+            <button id="down-btn" class="btn">✖️</button>
         </div>
     </div>
 
@@ -106,30 +107,20 @@
 
         function movePlayer(x, y) {
             if (gameOver) return;
-            if (!selected && maze[y][x] === "😊") {
-                maze[y][x] = "😎";
-                selected = true;
-            } else if (selected) {
-                let dx = Math.abs(x - playerX);
-                let dy = Math.abs(y - playerY);
+            let dx = Math.abs(x - playerX);
+            let dy = Math.abs(y - playerY);
 
-                if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
-                    if (maze[y][x] !== "⬛") {
-                        maze[playerY][playerX] = "🟩";
-                        playerX = x;
-                        playerY = y;
-                        maze[y][x] = "😊";
-                        selected = false;
+            if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
+                if (maze[y][x] !== "⬛") {
+                    maze[playerY][playerX] = "🟩";
+                    playerX = x;
+                    playerY = y;
+                    maze[y][x] = "😊";
 
-                        if (x === goalX && y === goalY) {
-                            gameOver = true;
-                            document.getElementById("timer").innerText = `🎉 You Won! Score: ${timeLeft}`;
-                            saveScore(timeLeft);
-                        }
-                    }
+                    checkWin();
+                    renderGrid();
                 }
             }
-            renderGrid();
         }
 
         function moveViaButton(dx, dy) {
@@ -145,22 +136,38 @@
                 renderGrid();
                 setTimeout(() => {
                     maze[playerY][playerX] = "😊";
+                    checkWin();
                     renderGrid();
                 }, 1000);
             }
         }
 
+        function checkWin() {
+            if (playerX === goalX && playerY === goalY) {
+                gameOver = true;
+                document.getElementById("timer").innerText = `🎉 You Won! Score: ${timeLeft}`;
+                saveScore(timeLeft);
+            }
+        }
+
         function updateControls() {
-            document.getElementById("up-btn").style.display = (playerY > 0 && maze[playerY - 1][playerX] !== "⬛") ? "block" : "none";
-            document.getElementById("down-btn").style.display = (playerY < size - 1 && maze[playerY + 1][playerX] !== "⬛") ? "block" : "none";
-            document.getElementById("left-btn").style.display = (playerX > 0 && maze[playerY][playerX - 1] !== "⬛") ? "block" : "none";
-            document.getElementById("right-btn").style.display = (playerX < size - 1 && maze[playerY][playerX + 1] !== "⬛") ? "block" : "none";
+            document.getElementById("up-btn").innerText = (playerY > 0 && maze[playerY - 1][playerX] !== "⬛") ? "⬆️" : "✖️";
+            document.getElementById("down-btn").innerText = (playerY < size - 1 && maze[playerY + 1][playerX] !== "⬛") ? "⬇️" : "✖️";
+            document.getElementById("left-btn").innerText = (playerX > 0 && maze[playerY][playerX - 1] !== "⬛") ? "⬅️" : "✖️";
+            document.getElementById("right-btn").innerText = (playerX < size - 1 && maze[playerY][playerX + 1] !== "⬛") ? "➡️" : "✖️";
         }
 
         document.getElementById("up-btn").onclick = () => moveViaButton(0, -1);
         document.getElementById("down-btn").onclick = () => moveViaButton(0, 1);
         document.getElementById("left-btn").onclick = () => moveViaButton(-1, 0);
         document.getElementById("right-btn").onclick = () => moveViaButton(1, 0);
+
+        setInterval(() => {
+            if (!gameOver && timeLeft > 0) {
+                timeLeft--;
+                document.getElementById("timer").innerText = `Time Left: ${timeLeft}`;
+            }
+        }, 1000);
 
         generateMaze();
         displayHistory();
