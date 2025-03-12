@@ -46,6 +46,9 @@
         let gameOver = false;
 
         function generateMaze() {
+            gameOver = false;
+            timeLeft = 60;
+            document.getElementById("timer").innerText = `Time Left: ${timeLeft}`;
             maze = Array(size).fill(null).map(() => Array(size).fill('⬛'));
 
             function carveMaze(x, y) {
@@ -88,6 +91,10 @@
                         cell.innerHTML = maze[y][x]; 
                     } else {
                         cell.innerHTML = "⬛";
+                    }
+
+                    if (maze[y][x] !== "⬛") {
+                        cell.onclick = () => movePlayer(x, y);
                     }
 
                     grid.appendChild(cell);
@@ -157,10 +164,10 @@
         }
 
         function updateControls() {
-            document.getElementById("up-btn").innerText = (playerY > 0 && maze[playerY - 1][playerX] !== "⬛") ? "⬆️" : "✖️";
-            document.getElementById("down-btn").innerText = (playerY < size - 1 && maze[playerY + 1][playerX] !== "⬛") ? "⬇️" : "✖️";
-            document.getElementById("left-btn").innerText = (playerX > 0 && maze[playerY][playerX - 1] !== "⬛") ? "⬅️" : "✖️";
-            document.getElementById("right-btn").innerText = (playerX < size - 1 && maze[playerY][playerX + 1] !== "⬛") ? "➡️" : "✖️";
+            document.getElementById("up-btn").onclick = () => moveViaButton(0, -1);
+            document.getElementById("down-btn").onclick = () => moveViaButton(0, 1);
+            document.getElementById("left-btn").onclick = () => moveViaButton(-1, 0);
+            document.getElementById("right-btn").onclick = () => moveViaButton(1, 0);
         }
 
         function toggleHistory() {
