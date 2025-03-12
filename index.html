@@ -12,7 +12,7 @@
         .timer { margin-top: 10px; font-size: 20px; }
         #controls { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
         .control-row { display: flex; gap: 10px; }
-        .btn { font-size: 60px; /* Increased size for arrows and X */ cursor: pointer; background: none; border: none; touch-action: manipulation; }
+        .btn { font-size: 60px; cursor: pointer; background: none; border: none; touch-action: manipulation; }
         .history { margin-top: 20px; }
         #inventory { margin-top: 10px; font-size: 18px; color: limegreen; }
     </style>
@@ -42,8 +42,8 @@
     <script>
         const size = 10;
         let maze = [];
-        let playerX = 0, playerY = 0;
-        let goalX = size - 1, goalY = size - 1;
+        let playerX = 1, playerY = 1;
+        let goalX = 8, goalY = 8;
         let flashlightX, flashlightY;
         let hasFlashlight = false;
         let timeLeft = 60;
@@ -55,7 +55,9 @@
             hasFlashlight = false;
             document.getElementById("timer").innerText = `Time Left: ${timeLeft}`;
             document.getElementById("inventory").innerText = "Inventory: (Empty)";
-            maze = Array(size).fill(null).map(() => Array(size).fill('⬛'));
+
+            // Create an empty grid filled with walls (`🪨`)
+            maze = Array(size).fill(null).map(() => Array(size).fill('🪨'));
 
             function carveMaze(x, y) {
                 maze[y][x] = '🟩';
@@ -64,26 +66,29 @@
 
                 for (let [dx, dy] of directions) {
                     let nx = x + dx * 2, ny = y + dy * 2;
-                    if (nx >= 0 && ny >= 0 && nx < size && ny < size && maze[ny][nx] === '⬛') {
+                    if (nx >= 1 && ny >= 1 && nx < size - 1 && ny < size - 1 && maze[ny][nx] === '🪨') {
                         maze[y + dy][x + dx] = '🟩';
                         carveMaze(nx, ny);
                     }
                 }
             }
 
-            carveMaze(0, 0);
+            // Generate maze inside the border
+            carveMaze(1, 1);
 
+            // Ensure goal is reachable
             if (maze[goalY - 1]?.[goalX] !== '🟩' && maze[goalY]?.[goalX - 1] !== '🟩') {
                 maze[goalY - 1][goalX] = '🟩';
             }
 
+            // Place the flashlight inside the open space
             do {
-                flashlightX = Math.floor(Math.random() * size);
-                flashlightY = Math.floor(Math.random() * size);
+                flashlightX = Math.floor(Math.random() * (size - 2)) + 1;
+                flashlightY = Math.floor(Math.random() * (size - 2)) + 1;
             } while (maze[flashlightY][flashlightX] !== '🟩');
 
             maze[flashlightY][flashlightX] = '🔦';
-            maze[0][0] = '😊';
+            maze[1][1] = '😊';
             maze[goalY][goalX] = '🏁';
 
             renderGrid();
@@ -109,7 +114,7 @@
                         cell.innerHTML = "⬛";
                     }
 
-                    if (maze[y][x] !== "⬛") {
+                    if (maze[y][x] !== "🪨") {
                         cell.onclick = () => movePlayer(x, y);
                     }
 
@@ -121,13 +126,13 @@
 
         function movePlayer(x, y) {
             if (gameOver) return;
-            if (x < 0 || x >= size || y < 0 || y >= size) return;  
+            if (maze[y][x] === "🪨") return;  // Prevent moving into walls
 
             let dx = Math.abs(x - playerX);
             let dy = Math.abs(y - playerY);
 
             if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
-                if (maze[y][x] !== "⬛") {
+                if (maze[y][x] !== "🪨") {
                     maze[playerY][playerX] = "🟩";
                     playerX = x;
                     playerY = y;
@@ -165,7 +170,7 @@
             document.getElementById("score-list").innerHTML = scores.map(s => `<p>Score: ${s}</p>`).join("");
         }
 
-        generateMaze();  
+        generateMaze();
     </script>
 </body>
 </html>
