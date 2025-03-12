@@ -125,7 +125,7 @@
 
         function movePlayer(x, y) {
             if (gameOver) return;
-            if (maze[y][x] === "🪨") return;  // Prevent moving into walls
+            if (maze[y][x] === "🪨") return;
 
             let dx = Math.abs(x - playerX);
             let dy = Math.abs(y - playerY);
@@ -156,17 +156,26 @@
             }
         }
 
+        function saveScore(score) {
+            let scores = JSON.parse(localStorage.getItem("emojiMazeScores")) || [];
+            scores.push(score);
+            scores.sort((a, b) => b - a);
+            if (scores.length > 10) scores = scores.slice(0, 10);
+            localStorage.setItem("emojiMazeScores", JSON.stringify(scores));
+            updateScoreboard();
+        }
+
+        function updateScoreboard() {
+            let scores = JSON.parse(localStorage.getItem("emojiMazeScores")) || [];
+            document.getElementById("score-list").innerHTML = scores.map(s => `<p>Score: ${s}</p>`).join("");
+        }
+
         function startTimer() {
             setInterval(() => {
                 if (gameOver || timeLeft <= 0) return;
                 timeLeft--;
                 document.getElementById("timer").innerText = `Time Left: ${timeLeft}`;
             }, 1000);
-        }
-
-        function updateScoreboard() {
-            let scores = JSON.parse(localStorage.getItem("emojiMazeScores")) || [];
-            document.getElementById("score-list").innerHTML = scores.map(s => `<p>Score: ${s}</p>`).join("");
         }
 
         generateMaze();
