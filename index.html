@@ -24,7 +24,8 @@
     <script>
         const size = 10;
         let maze = [];
-        let playerX, playerY, goalX, goalY;
+        let playerX = 0, playerY = 0; // Player starts at (0,0)
+        let goalX = size - 1, goalY = size - 1; // Goal at bottom-right
         let selected = false;
         let timeLeft = 60;
         let gameOver = false;
@@ -32,27 +33,23 @@
         function generateMaze() {
             maze = Array(size).fill(null).map(() => Array(size).fill('🟩'));
 
-            // Place walls randomly, ensuring solvability
+            // Place walls randomly but ensure solvability
             for (let i = 0; i < size * size * 0.3; i++) {
                 let x = Math.floor(Math.random() * size);
                 let y = Math.floor(Math.random() * size);
                 maze[y][x] = '⬛';
             }
 
-            // Set player start position at the top-left (0,0)
-            playerX = 0;
-            playerY = 0;
-            goalX = size - 1;
-            goalY = size - 1;
-            maze[0][0] = '😊';
+            // Set start position (0,0) and goal position (size-1, size-1)
+            maze[playerY][playerX] = '😊';
             maze[goalY][goalX] = '🏁';
 
-            // Ensure a solvable path using a simple backtracking method
-            let stack = [[0, 0]];
+            // Ensure a solvable path from start to finish
+            let stack = [[playerX, playerY]];
             while (stack.length) {
                 let [x, y] = stack.pop();
                 maze[y][x] = '🟩';
-                let moves = [[1, 0], [-1, 0], [0, 1], [0, -1]]; // Only up, down, left, right (no diagonal)
+                let moves = [[1, 0], [-1, 0], [0, 1], [0, -1]]; // Only adjacent moves
                 moves = moves.sort(() => Math.random() - 0.5);
                 for (let [dx, dy] of moves) {
                     let nx = x + dx, ny = y + dy;
@@ -61,6 +58,9 @@
                     }
                 }
             }
+
+            // Make sure the player starts on an open path
+            maze[0][0] = '😊';
 
             renderGrid();
         }
