@@ -60,39 +60,49 @@
             document.getElementById("play-again-btn").style.display = "none";  
             maze = Array(size).fill(null).map(() => Array(size).fill('⬛'));
 
-            function carveMaze(x, y) {
-                maze[y][x] = '🟩';
-                let directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-                directions = directions.sort(() => Math.random() - 0.5);
+            function generateMaze() {
+    gameOver = false; // ✅ Ensure the game is not stuck in "Game Over"
+    timeLeft = 60;
+    hasFlashlight = false;
+    document.getElementById("timer").innerText = `Time Left: ${timeLeft}`;
+    document.getElementById("inventory").innerText = "Inventory: (Empty)";
+    document.getElementById("play-again-btn").style.display = "none";
 
-                for (let [dx, dy] of directions) {
-                    let nx = x + dx * 2, ny = y + dy * 2;
-                    if (nx >= 0 && ny >= 0 && nx < size && ny < size && maze[ny][nx] === '⬛') {
-                        maze[y + dy][x + dx] = '🟩';
-                        carveMaze(nx, ny);
-                    }
-                }
+    maze = Array(size).fill(null).map(() => Array(size).fill('⬛'));
+
+    function carveMaze(x, y) {
+        maze[y][x] = '🟩';
+        let directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        directions = directions.sort(() => Math.random() - 0.5);
+
+        for (let [dx, dy] of directions) {
+            let nx = x + dx * 2, ny = y + dy * 2;
+            if (nx >= 0 && ny >= 0 && nx < size && ny < size && maze[ny][nx] === '⬛') {
+                maze[y + dy][x + dx] = '🟩';
+                carveMaze(nx, ny);
             }
-
-            carveMaze(0, 0);
-
-            if (maze[goalY - 1]?.[goalX] !== '🟩' && maze[goalY]?.[goalX - 1] !== '🟩') {
-                maze[goalY - 1][goalX] = '🟩';
-            }
-
-            do {
-                flashlightX = Math.floor(Math.random() * size);
-                flashlightY = Math.floor(Math.random() * size);
-            } while (maze[flashlightY][flashlightX] !== '🟩');
-
-            maze[flashlightY][flashlightX] = '🔦';
-            maze[0][0] = '😊';
-            maze[goalY][goalX] = '🏁';
-
-            renderGrid();
-            updateScoreboard();
         }
+    }
 
+    carveMaze(0, 0);
+
+    if (maze[goalY - 1]?.[goalX] !== '🟩' && maze[goalY]?.[goalX - 1] !== '🟩') {
+        maze[goalY - 1][goalX] = '🟩';
+    }
+
+    do {
+        flashlightX = Math.floor(Math.random() * size);
+        flashlightY = Math.floor(Math.random() * size);
+    } while (maze[flashlightY][flashlightX] !== '🟩');
+
+    maze[flashlightY][flashlightX] = '🔦';
+    maze[0][0] = '😊';
+    maze[goalY][goalX] = '🏁';
+
+    renderGrid(); // ✅ Ensure the grid is displayed
+
+    startTimer(); // ✅ Start timer only AFTER grid is generated
+}
         function renderGrid() {
             const grid = document.getElementById("grid");
             grid.innerHTML = "";
