@@ -12,10 +12,9 @@
         .timer { margin-top: 10px; font-size: 20px; }
         #controls { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
         .control-row { display: flex; gap: 10px; }
-        .btn { font-size: 30px; cursor: pointer; background: none; border: none; touch-action: manipulation; }
+        .btn { font-size: 60px;  /* Increased from 30px to 60px */ cursor: pointer; background: none; border: none; touch-action: manipulation; }
         .history { margin-top: 20px; }
         #inventory { margin-top: 10px; font-size: 18px; color: limegreen; }
-        #play-again-btn { display: none; font-size: 20px; margin-top: 10px; padding: 10px; cursor: pointer; background-color: limegreen; color: black; border: none; }
     </style>
 </head>
 <body>
@@ -34,8 +33,6 @@
         </div>
         <div class="control-row"><button id="down-btn" class="btn">⬇️</button></div>
     </div>
-
-    <button id="play-again-btn" onclick="location.reload()">Play Again</button>
 
     <div class="history" id="history">
         <h2>📜 High Scores</h2>
@@ -58,7 +55,6 @@
             hasFlashlight = false;
             document.getElementById("timer").innerText = `Time Left: ${timeLeft}`;
             document.getElementById("inventory").innerText = "Inventory: (Empty)";
-            document.getElementById("play-again-btn").style.display = "none";  
             maze = Array(size).fill(null).map(() => Array(size).fill('⬛'));
 
             function carveMaze(x, y) {
@@ -153,7 +149,6 @@
                 gameOver = true;
                 document.getElementById("timer").innerText = `🎉 You Won! Score: ${timeLeft}`;
                 saveScore(timeLeft);
-                document.getElementById("play-again-btn").style.display = "block";  
             }
         }
 
