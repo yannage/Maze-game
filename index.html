@@ -34,14 +34,14 @@
             // Start with all walls
             maze = Array(size).fill(null).map(() => Array(size).fill('⬛'));
 
-            // Carve out a single-path maze using depth-first search
+            // Carve out the main path using depth-first search
             function carveMaze(x, y) {
                 maze[y][x] = '🟩'; // Mark as path
                 let directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
                 directions = directions.sort(() => Math.random() - 0.5); // Shuffle directions
 
                 for (let [dx, dy] of directions) {
-                    let nx = x + dx * 2, ny = y + dy * 2; // Move in steps of 2
+                    let nx = x + dx * 2, ny = y + dy * 2;
                     if (nx >= 0 && ny >= 0 && nx < size && ny < size && maze[ny][nx] === '⬛') {
                         maze[y + dy][x + dx] = '🟩'; // Open path between steps
                         carveMaze(nx, ny);
@@ -51,6 +51,31 @@
 
             // Start carving from (0,0)
             carveMaze(0, 0);
+
+            // Ensure the goal is reachable
+            let stack = [[0, 0]];
+            let visited = new Set();
+            visited.add("0,0");
+
+            while (stack.length) {
+                let [x, y] = stack.pop();
+                if (x === goalX && y === goalY) break;
+
+                let neighbors = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => [x + dx, y + dy]);
+                for (let [nx, ny] of neighbors) {
+                    if (nx >= 0 && ny >= 0 && nx < size && ny < size && !visited.has(`${nx},${ny}`) && maze[ny][nx] === '🟩') {
+                        visited.add(`${nx},${ny}`);
+                        stack.push([nx, ny]);
+                    }
+                }
+            }
+
+            // Add additional random openings to create alternate paths
+            for (let i = 0; i < size * 0.5; i++) {
+                let x = Math.floor(Math.random() * size);
+                let y = Math.floor(Math.random() * size);
+                if (maze[y][x] === '⬛') maze[y][x] = '🟩'; // Create small optional paths
+            }
 
             // Set player and goal
             maze[0][0] = '😊';
