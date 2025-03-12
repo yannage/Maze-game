@@ -3,140 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emoji Maze Game</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { font-family: 'Courier New', monospace; background-color: black; color: limegreen; text-align: center; }
-        #grid { display: grid; grid-template-columns: repeat(10, 40px); gap: 5px; justify-content: center; margin-top: 20px; }
-        .cell { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
-        .wall { cursor: not-allowed; }
-        .timer { margin-top: 10px; font-size: 20px; }
-        .history { margin-top: 20px; }
-    </style>
+    <title>Online Emoji Checkers</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1 class="text-3xl font-bold">🕹️ Emoji Maze Game</h1>
-    <p>Click 😊 to select, then click a valid adjacent spot to move!</p>
-    <p class="timer" id="timer">Time Left: 60</p>
-    <div id="grid"></div>
-    <div class="history" id="history"></div>
-
-    <script>
-        const size = 10;
-        let maze = [];
-        let playerX = 0, playerY = 0;
-        let goalX = size - 1, goalY = size - 1;
-        let selected = false;
-        let timeLeft = 60;
-        let gameOver = false;
-
-        function generateMaze() {
-            // Start with all walls
-            maze = Array(size).fill(null).map(() => Array(size).fill('⬛'));
-
-            function carveMaze(x, y) {
-                maze[y][x] = '🟩';
-                let directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-                directions = directions.sort(() => Math.random() - 0.5);
-
-                for (let [dx, dy] of directions) {
-                    let nx = x + dx * 2, ny = y + dy * 2;
-                    if (nx >= 0 && ny >= 0 && nx < size && ny < size && maze[ny][nx] === '⬛') {
-                        maze[y + dy][x + dx] = '🟩';
-                        carveMaze(nx, ny);
-                    }
-                }
-            }
-
-            carveMaze(0, 0);
-
-            // Ensure the goal is connected
-            if (maze[goalY - 1]?.[goalX] !== '🟩' && maze[goalY]?.[goalX - 1] !== '🟩') {
-                maze[goalY - 1][goalX] = '🟩';
-            }
-
-            // Set player and goal
-            maze[0][0] = '😊';
-            maze[goalY][goalX] = '🏁';
-
-            renderGrid();
-        }
-
-        function renderGrid() {
-            const grid = document.getElementById("grid");
-            grid.innerHTML = "";
-            grid.style.gridTemplateColumns = `repeat(${size}, 40px)`;
-
-            for (let y = 0; y < size; y++) {
-                for (let x = 0; x < size; x++) {
-                    let cell = document.createElement("div");
-                    cell.classList.add("cell");
-                    cell.innerHTML = maze[y][x];
-
-                    if (maze[y][x] === '⬛') {
-                        cell.classList.add("wall");
-                    } else {
-                        cell.onclick = () => movePlayer(x, y);
-                    }
-
-                    grid.appendChild(cell);
-                }
-            }
-        }
-
-        function movePlayer(x, y) {
-            if (gameOver) return;
-            if (!selected && maze[y][x] === "😊") {
-                maze[y][x] = "😎";
-                selected = true;
-            } else if (selected) {
-                let dx = Math.abs(x - playerX);
-                let dy = Math.abs(y - playerY);
-
-                if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
-                    if (maze[y][x] !== "⬛") {
-                        maze[playerY][playerX] = "🟩";
-                        playerX = x;
-                        playerY = y;
-                        maze[y][x] = "😊";
-                        selected = false;
-
-                        if (x === goalX && y === goalY) {
-                            gameOver = true;
-                            document.getElementById("timer").innerText = `🎉 You Won! Score: ${timeLeft}`;
-                            saveScore(timeLeft);
-                        }
-                    }
-                }
-            }
-            renderGrid();
-        }
-
-        function saveScore(score) {
-            let scores = JSON.parse(localStorage.getItem("emojiMazeScores")) || [];
-            scores.push(score);
-            localStorage.setItem("emojiMazeScores", JSON.stringify(scores));
-            displayHistory();
-        }
-
-        function displayHistory() {
-            let scores = JSON.parse(localStorage.getItem("emojiMazeScores")) || [];
-            let history = document.getElementById("history");
-            history.innerHTML = "<h2>📜 Previous Scores</h2>" + scores.map(s => `<p>Score: ${s}</p>`).join("");
-        }
-
-        setInterval(() => {
-            if (!gameOver && timeLeft > 0) {
-                timeLeft--;
-                document.getElementById("timer").innerText = `Time Left: ${timeLeft}`;
-            } else if (!gameOver) {
-                document.getElementById("timer").innerText = "⏳ Time's Up!";
-                gameOver = true;
-            }
-        }, 1000);
-
-        generateMaze();
-        displayHistory();
-    </script>
+    <h1>Online Emoji Checkers</h1>
+    <h2>Red: <span id="red-score">0</span> - Black: <span id="black-score">0</span></h2>
+    <div id="board"></div>
+    <div id="controls">
+        <button id="up" hidden>⬆️</button>
+        <div>
+            <button id="left" hidden>⬅️</button>
+            <button id="right" hidden>➡️</button>
+        </div>
+        <button id="down" hidden>⬇️</button>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
