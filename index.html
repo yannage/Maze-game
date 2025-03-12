@@ -15,6 +15,7 @@
         .btn { font-size: 30px; cursor: pointer; background: none; border: none; touch-action: manipulation; }
         .history { margin-top: 20px; }
         #inventory { margin-top: 10px; font-size: 18px; color: limegreen; }
+        #play-again-btn { display: none; font-size: 20px; margin-top: 10px; padding: 10px; cursor: pointer; background-color: limegreen; color: black; border: none; }
     </style>
 </head>
 <body>
@@ -33,6 +34,8 @@
         </div>
         <div class="control-row"><button id="down-btn" class="btn">⬇️</button></div>
     </div>
+
+    <button id="play-again-btn" onclick="location.reload()">Play Again</button>
 
     <div class="history" id="history">
         <h2>📜 High Scores</h2>
@@ -55,6 +58,7 @@
             hasFlashlight = false;
             document.getElementById("timer").innerText = `Time Left: ${timeLeft}`;
             document.getElementById("inventory").innerText = "Inventory: (Empty)";
+            document.getElementById("play-again-btn").style.display = "none";  // Hide button on new game
             maze = Array(size).fill(null).map(() => Array(size).fill('⬛'));
 
             function carveMaze(x, y) {
@@ -121,6 +125,8 @@
 
         function movePlayer(x, y) {
             if (gameOver) return;
+            if (x < 0 || x >= size || y < 0 || y >= size) return;  // Prevent walking off screen
+
             let dx = Math.abs(x - playerX);
             let dy = Math.abs(y - playerY);
 
@@ -142,19 +148,12 @@
             }
         }
 
-        function updateControls() {
-            document.getElementById("up-btn").onclick = () => movePlayer(playerX, playerY - 1);
-            document.getElementById("down-btn").onclick = () => movePlayer(playerX, playerY + 1);
-            document.getElementById("left-btn").onclick = () => movePlayer(playerX - 1, playerY);
-            document.getElementById("right-btn").onclick = () => movePlayer(playerX + 1, playerY);
-        }
-
         function checkWin() {
             if (playerX === goalX && playerY === goalY) {
                 gameOver = true;
                 document.getElementById("timer").innerText = `🎉 You Won! Score: ${timeLeft}`;
                 saveScore(timeLeft);
-                setTimeout(generateMaze, 3000);
+                document.getElementById("play-again-btn").style.display = "block";  // Show button on win
             }
         }
 
