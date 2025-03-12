@@ -9,7 +9,6 @@
         body { font-family: 'Courier New', monospace; background-color: black; color: limegreen; text-align: center; }
         #grid { display: grid; grid-template-columns: repeat(10, 40px); gap: 5px; justify-content: center; margin-top: 20px; }
         .cell { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
-        .wall { cursor: not-allowed; }
         .timer { margin-top: 10px; font-size: 20px; }
         #controls { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
         .control-row { display: flex; gap: 10px; }
@@ -58,4 +57,128 @@
             document.getElementById("inventory").innerText = "Inventory: (Empty)";
             maze = Array(size).fill(null).map(() => Array(size).fill('⬛'));
 
-            function
+            function carveMaze(x, y) {
+                maze[y][x] = '🟩';
+                let directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+                directions = directions.sort(() => Math.random() - 0.5);
+
+                for (let [dx, dy] of directions) {
+                    let nx = x + dx * 2, ny = y + dy * 2;
+                    if (nx >= 0 && ny >= 0 && nx < size && ny < size && maze[ny][nx] === '⬛') {
+                        maze[y + dy][x + dx] = '🟩';
+                        carveMaze(nx, ny);
+                    }
+                }
+            }
+
+            carveMaze(0, 0);
+
+            if (maze[goalY - 1]?.[goalX] !== '🟩' && maze[goalY]?.[goalX - 1] !== '🟩') {
+                maze[goalY - 1][goalX] = '🟩';
+            }
+
+            do {
+                flashlightX = Math.floor(Math.random() * size);
+                flashlightY = Math.floor(Math.random() * size);
+            } while (maze[flashlightY][flashlightX] !== '🟩');
+
+            maze[flashlightY][flashlightX] = '🔦';
+            maze[0][0] = '😊';
+            maze[goalY][goalX] = '🏁';
+
+            renderGrid();
+            updateScoreboard();
+            startTimer();
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById("grid");
+            grid.innerHTML = "";
+            grid.style.gridTemplateColumns = `repeat(${size}, 40px)`;
+
+            let fogRadius = hasFlashlight ? 4 : 2;
+
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    let cell = document.createElement("div");
+                    cell.classList.add("cell");
+
+                    if (Math.abs(x - playerX) <= fogRadius && Math.abs(y - playerY) <= fogRadius) {
+                        cell.innerHTML = maze[y][x]; 
+                    } else {
+                        cell.innerHTML = "⬛";
+                    }
+
+                    if (maze[y][x] !== "⬛") {
+                        cell.onclick = () => movePlayer(x, y);
+                    }
+
+                    grid.appendChild(cell);
+                }
+            }
+            updateControls();
+        }
+
+        function movePlayer(x, y) {
+            if (gameOver) return;
+            let dx = Math.abs(x - playerX);
+            let dy = Math.abs(y - playerY);
+
+            if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
+                if (maze[y][x] !== "⬛") {
+                    maze[playerY][playerX] = "🟩";
+                    playerX = x;
+                    playerY = y;
+                    maze[y][x] = "😊";
+
+                    if (x === flashlightX && y === flashlightY) {
+                        hasFlashlight = true;
+                        document.getElementById("inventory").innerText = "Inventory: 🔦";
+                    }
+
+                    checkWin();
+                    renderGrid();
+                }
+            }
+        }
+
+        function updateControls() {
+            document.getElementById("up-btn").onclick = () => movePlayer(playerX, playerY - 1);
+            document.getElementById("down-btn").onclick = () => movePlayer(playerX, playerY + 1);
+            document.getElementById("left-btn").onclick = () => movePlayer(playerX - 1, playerY);
+            document.getElementById("right-btn").onclick = () => movePlayer(playerX + 1, playerY);
+        }
+
+        function checkWin() {
+            if (playerX === goalX && playerY === goalY) {
+                gameOver = true;
+                document.getElementById("timer").innerText = `🎉 You Won! Score: ${timeLeft}`;
+                saveScore(timeLeft);
+                setTimeout(generateMaze, 3000);
+            }
+        }
+
+        function startTimer() {
+            const interval = setInterval(() => {
+                if (gameOver || timeLeft <= 0) {
+                    clearInterval(interval);
+                    if (timeLeft <= 0) {
+                        document.getElementById("timer").innerText = "❌ Game Over!";
+                        setTimeout(generateMaze, 3000);
+                    }
+                } else {
+                    timeLeft--;
+                    document.getElementById("timer").innerText = `Time Left: ${timeLeft}`;
+                }
+            }, 1000);
+        }
+
+        function updateScoreboard() {
+            let scores = JSON.parse(localStorage.getItem("emojiMazeScores")) || [];
+            document.getElementById("score-list").innerHTML = scores.map(s => `<p>Score: ${s}</p>`).join("");
+        }
+
+        generateMaze();
+    </script>
+</body>
+</html>
