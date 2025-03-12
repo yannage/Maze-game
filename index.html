@@ -26,12 +26,12 @@
     <div id="inventory">Inventory: (Empty)</div>
     
     <div id="controls">
-        <div class="control-row"><button id="up-btn" class="btn">⬆️</button></div>
+        <div class="control-row"><button id="up-btn" class="btn" onclick="movePlayer(playerX, playerY - 1)">⬆️</button></div>
         <div class="control-row">
-            <button id="left-btn" class="btn">⬅️</button>
-            <button id="right-btn" class="btn">➡️</button>
+            <button id="left-btn" class="btn" onclick="movePlayer(playerX - 1, playerY)">⬅️</button>
+            <button id="right-btn" class="btn" onclick="movePlayer(playerX + 1, playerY)">➡️</button>
         </div>
-        <div class="control-row"><button id="down-btn" class="btn">⬇️</button></div>
+        <div class="control-row"><button id="down-btn" class="btn" onclick="movePlayer(playerX, playerY + 1)">⬇️</button></div>
     </div>
 
     <div class="history" id="history">
@@ -56,7 +56,7 @@
             document.getElementById("timer").innerText = `Time Left: ${timeLeft}`;
             document.getElementById("inventory").innerText = "Inventory: (Empty)";
 
-            // Create an empty grid filled with walls (`🪨`)
+            // Create a grid filled with walls (`🪨`)
             maze = Array(size).fill(null).map(() => Array(size).fill('🪨'));
 
             function carveMaze(x, y) {
@@ -88,7 +88,7 @@
             } while (maze[flashlightY][flashlightX] !== '🟩');
 
             maze[flashlightY][flashlightX] = '🔦';
-            maze[1][1] = '😊';
+            maze[playerY][playerX] = '😊';
             maze[goalY][goalX] = '🏁';
 
             renderGrid();
@@ -121,7 +121,6 @@
                     grid.appendChild(cell);
                 }
             }
-            updateControls();
         }
 
         function movePlayer(x, y) {
