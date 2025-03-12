@@ -14,8 +14,7 @@
         #controls { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
         .control-row { display: flex; gap: 10px; }
         .btn { font-size: 30px; cursor: pointer; background: none; border: none; }
-        .history { display: none; margin-top: 20px; }
-        .toggle-history { margin-top: 20px; cursor: pointer; color: limegreen; font-size: 18px; }
+        .history { margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -33,8 +32,10 @@
         <div class="control-row"><button id="down-btn" class="btn">✖️</button></div>
     </div>
 
-    <button class="toggle-history" onclick="toggleHistory()">📜 Show Scores</button>
-    <div class="history" id="history"></div>
+    <div class="history" id="history">
+        <h2>📜 High Scores</h2>
+        <div id="score-list"></div>
+    </div>
 
     <script>
         const size = 10;
@@ -75,6 +76,7 @@
             maze[goalY][goalX] = '🏁';
 
             renderGrid();
+            updateScoreboard();
         }
 
         function renderGrid() {
@@ -136,7 +138,7 @@
                     maze[playerY][playerX] = "😊";
                     checkWin();
                     renderGrid();
-                }, 1000);
+                }, 500);
             }
         }
 
@@ -158,7 +160,7 @@
                         renderGrid();
                         if (y === size - 1 && x === size - 1) setTimeout(callback, 3000);
                     }, delay);
-                    delay += 100;
+                    delay += 50;
                 }
             }
         }
@@ -170,9 +172,17 @@
             document.getElementById("right-btn").onclick = () => moveViaButton(1, 0);
         }
 
-        function toggleHistory() {
-            const history = document.getElementById("history");
-            history.style.display = history.style.display === "none" ? "block" : "none";
+        function saveScore(score) {
+            let scores = JSON.parse(localStorage.getItem("emojiMazeScores")) || [];
+            scores.push(score);
+            scores.sort((a, b) => b - a);
+            localStorage.setItem("emojiMazeScores", JSON.stringify(scores.slice(0, 10)));
+            updateScoreboard();
+        }
+
+        function updateScoreboard() {
+            let scores = JSON.parse(localStorage.getItem("emojiMazeScores")) || [];
+            document.getElementById("score-list").innerHTML = scores.map(s => `<p>Score: ${s}</p>`).join("");
         }
 
         setInterval(() => {
