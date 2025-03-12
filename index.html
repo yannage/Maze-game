@@ -27,12 +27,12 @@
     <div id="inventory">Inventory: (Empty)</div>
     
     <div id="controls">
-        <div class="control-row"><button id="up-btn" class="btn">✖️</button></div>
+        <div class="control-row"><button id="up-btn" class="btn">⬆️</button></div>
         <div class="control-row">
-            <button id="left-btn" class="btn">✖️</button>
-            <button id="right-btn" class="btn">✖️</button>
+            <button id="left-btn" class="btn">⬅️</button>
+            <button id="right-btn" class="btn">➡️</button>
         </div>
-        <div class="control-row"><button id="down-btn" class="btn">✖️</button></div>
+        <div class="control-row"><button id="down-btn" class="btn">⬇️</button></div>
     </div>
 
     <div class="history" id="history">
@@ -47,7 +47,6 @@
         let goalX = size - 1, goalY = size - 1;
         let flashlightX, flashlightY;
         let hasFlashlight = false;
-        let selected = false;
         let timeLeft = 60;
         let gameOver = false;
 
@@ -144,6 +143,13 @@
             }
         }
 
+        function updateControls() {
+            document.getElementById("up-btn").innerText = (playerY > 0 && maze[playerY - 1][playerX] !== "⬛") ? "⬆️" : "✖️";
+            document.getElementById("down-btn").innerText = (playerY < size - 1 && maze[playerY + 1][playerX] !== "⬛") ? "⬇️" : "✖️";
+            document.getElementById("left-btn").innerText = (playerX > 0 && maze[playerY][playerX - 1] !== "⬛") ? "⬅️" : "✖️";
+            document.getElementById("right-btn").innerText = (playerX < size - 1 && maze[playerY][playerX + 1] !== "⬛") ? "➡️" : "✖️";
+        }
+
         function checkWin() {
             if (playerX === goalX && playerY === goalY) {
                 gameOver = true;
@@ -153,34 +159,18 @@
             }
         }
 
-        function animateGrid(symbol, callback) {
-            let delay = 0;
-            for (let y = 0; y < size; y++) {
-                for (let x = 0; x < size; x++) {
-                    setTimeout(() => {
-                        maze[y][x] = symbol;
-                        renderGrid();
-                        if (y === size - 1 && x === size - 1) setTimeout(callback, 3000);
-                    }, delay);
-                    delay += 50;
-                }
-            }
+        function saveScore(score) {
+            let scores = JSON.parse(localStorage.getItem("emojiMazeScores")) || [];
+            scores.push(score);
+            scores.sort((a, b) => b - a);
+            localStorage.setItem("emojiMazeScores", JSON.stringify(scores.slice(0, 10)));
+            updateScoreboard();
         }
 
         function updateScoreboard() {
             let scores = JSON.parse(localStorage.getItem("emojiMazeScores")) || [];
             document.getElementById("score-list").innerHTML = scores.map(s => `<p>Score: ${s}</p>`).join("");
         }
-
-        setInterval(() => {
-            if (!gameOver && timeLeft > 0) {
-                timeLeft--;
-                document.getElementById("timer").innerText = `Time Left: ${timeLeft}`;
-            } else if (!gameOver) {
-                gameOver = true;
-                animateGrid("❌", () => setTimeout(generateMaze, 3000));
-            }
-        }, 1000);
 
         generateMaze();
     </script>
